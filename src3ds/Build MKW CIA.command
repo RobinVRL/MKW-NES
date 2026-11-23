@@ -1,0 +1,32 @@
+#!/bin/bash
+# macOS: double-click, then drag your Mario Kart Wii (USA) ISO or WBFS into the window.
+# Linux: run  bash "Build MKW CIA.command"  and type or paste the path.
+# Works from the top of the builder folder or from tools/release.
+set -o pipefail
+cd "$(dirname "$0")" || exit 1
+[ -f tools/release/build_cia.py ] || cd ../.. || exit 1
+PYTHON=python3
+"$PYTHON" -c 'import sys; sys.exit(not ((3, 11) <= sys.version_info[:2] < (3, 15)))' 2>/dev/null || {
+    for candidate in python3.14 python3.13 python3.12 python3.11; do
+        if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import sys; sys.exit(not ((3, 11) <= sys.version_info[:2] < (3, 15)))' 2>/dev/null; then
+            PYTHON=$candidate
+            break
+        fi
+    done
+}
+"$PYTHON" -c 'import sys; sys.exit(not ((3, 11) <= sys.version_info[:2] < (3, 15)))' 2>/dev/null || { echo "Python 3.11 through 3.14 is needed; Python 3.15 is not supported yet: https://www.python.org/downloads/"; exit 1; }
+# read without -r undoes the backslashes Terminal adds to a dragged path ("\ ", "\(").
+read -p "Drag your Mario Kart Wii (USA) disc image here and press Return: " disc
+disc="${disc%\"}";disc="${disc#\"}";disc="${disc%\'}";disc="${disc#\'}"
+[ -f "$disc" ] || { echo "No disc image at: $disc"; exit 1; }
+[ -d vendor/gclib ] || "$PYTHON" tools/bootstrap.py || exit 1
+[ -x .venv/bin/python ] || "$PYTHON" -m venv .venv || exit 1
+.venv/bin/python -c 'import sys; sys.exit(not ((3, 11) <= sys.version_info[:2] < (3, 15)))' || { echo "The existing .venv uses an unsupported Python version. Remove .venv and rerun with Python 3.11 through 3.14."; exit 1; }
+# Install the packages whenever the build environment cannot import them
+# (a marker file alone could say "installed" after a failed or partial install).
+if ! .venv/bin/python -c 'import numpy, PIL, Crypto, unicorn' 2>/dev/null; then
+    .venv/bin/python -m pip install -r requirements.txt || exit 1
+    .venv/bin/python -c 'import numpy, PIL, Crypto, unicorn' || { echo "The Python packages above did not load. Remove the .venv folder and run this again. If it happens again, share this message in an issue."; exit 1; }
+fi
+PYTHONUNBUFFERED=1 .venv/bin/python tools/release/build_cia.py "$disc" 2>&1 | tee build-cia-log.txt || { status=$?; echo "Build failed. See build-cia-log.txt for details."; exit "$status"; }
+echo "Log: $(pwd)/build-cia-log.txt"

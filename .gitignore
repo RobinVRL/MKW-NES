@@ -1,0 +1,41 @@
+# Build output and local tooling
+build/
+.venv/
+.toolchain/
+node_modules/
+__pycache__/
+*.pyc
+*.o
+*.log
+scan.txt
+
+# Your own disc and anything generated from it: never publish
+rom/
+*.iso
+*.wbfs
+*.rvz
+*.nkit
+*.pak
+*.t3x
+*.cia
+*.3dsx
+*.bnr
+*.icn
+*.cgfx
+CFL_Res.dat
+src3ds/mkw-rom/*
+!src3ds/mkw-rom/.gitkeep
+src3ds/build-cia-log.txt
+
+# Nintendo artwork (supply your own; see src3ds/docs/BUILD-FROM-DISC.md)
+*.png
+*.jpg
+*.jpeg
+*.wav
+!src3ds/docs/fbi-update-qr.png
+!src3ds/docs/universal-updater-qr.png
+
+# Third-party vendor checkouts fetched by the builder
+src3ds/vendor/noclip/
+src3ds/vendor/gclib/
+src3ds/vendor/cfl-tool/
