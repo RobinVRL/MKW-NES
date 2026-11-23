@@ -6,11 +6,6 @@ The original 3DS game code isn't changed. Instead, this project swaps out the 3D
 system libraries (libctru and citro3d) for versions that run on the console's
 Linux system and Mali-400 GPU.
 
-> [!WARNING]
-> **Experimental.** So far the port has only been tested in the PC test build.
-> It hasn't been confirmed on real hardware yet. Back up your console with
-> hakchi before trying it.
-
 > [!IMPORTANT]
 > **This repository has no Nintendo files in it**: no disc image, textures,
 > models, sounds, logos, icons or map markers. You make the game files yourself
