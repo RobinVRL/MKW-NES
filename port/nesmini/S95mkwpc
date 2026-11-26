@@ -1,0 +1,46 @@
+#!/bin/sh
+# /etc/init.d/S95mkwpc: mount the PC's game-file share at boot (hakchi CE).
+# Settings live in /etc/mkw-pc.conf (root-only):
+#   PCUSER=...  PCPASS=...  PCSHARE=MKW  PC=169.254.x.x (optional, last-known PC)
+# Retries in the background for a few minutes, so a PC that's still booting or
+# a USB cable plugged in later still gets mounted. Logs to /tmp/mkw-mount.log.
+CONF=/etc/mkw-pc.conf
+MNT=/media/pc
+LOG=/tmp/mkw-mount.log
+
+try_mount() {
+  [ -f "$CONF" ] || { echo "no $CONF"; return 1; }
+  . "$CONF"
+  grep -q " $MNT cifs " /proc/mounts && return 0
+  modprobe cifs 2>/dev/null
+  mkdir -p "$MNT"
+  # Candidates: the configured PC, then anyone answering on the USB link.
+  for ip in $PC $(ip neigh show dev rndis0 2>/dev/null | awk '/169\.254\./{print $1}'); do
+    if mount -t cifs "//$ip/${PCSHARE:-MKW}" "$MNT" \
+        -o "username=$PCUSER,password=$PCPASS,sec=ntlmssp,uid=0,gid=0,file_mode=0777,dir_mode=0777,noserverino,actimeo=1" 2>>"$LOG"; then
+      echo "mounted //$ip/${PCSHARE:-MKW} at $MNT"
+      # Remember the address that worked for next boot.
+      [ "$ip" != "$PC" ] && sed -i "s/^PC=.*/PC=$ip/" "$CONF"
+      return 0
+    fi
+  done
+  # Poke the link so the PC shows up in the neighbour table next round.
+  ping -c 1 -W 1 -b 169.254.255.255 >/dev/null 2>&1
+  return 1
+}
+
+case "$1" in
+  start)
+    (
+      i=0
+      while [ $i -lt 90 ]; do
+        try_mount >>"$LOG" 2>&1 && exit 0
+        sleep 2; i=$((i+1))
+      done
+      echo "gave up" >>"$LOG"
+    ) &
+    ;;
+  once) try_mount ;;
+  stop) umount "$MNT" 2>/dev/null ;;
+  *) echo "Usage: $0 {start|stop|once}"; exit 1 ;;
+esac

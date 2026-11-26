@@ -14,23 +14,29 @@ provides replacements that keep the same function names:
 | `include/` | — | GLES2, EGL and KHR headers |
 | `compat/` | — | `glibc_compat.c` sends newer glibc symbols to the console's glibc 2.23 |
 | `host/` | — | Shims and a crash handler for the PC test build |
-| `nesmini/` | — | Console launcher (`mkw.sh`), controller bridge, framebuffer capture and symbol checks |
+| `nesmini/` | — | Console launcher (`mkw.sh`), installers (`easy-install/`, `install.sh`, `share.ps1`, `fetch-sysroot.sh`), controller bridge, framebuffer capture and symbol checks |
 | `tests/` | — | Small probes for the backend |
 
 ## Requirements
 
+Most people should just run `setup.bat` (Windows) or `bash setup.sh`
+(Linux) from the repository root. Those install and fetch everything below.
+
 - Linux or WSL (Ubuntu recommended)
-- `arm-linux-gnueabihf-g++` (`sudo apt install g++-arm-linux-gnueabihf`)
+- `arm-linux-gnueabihf-g++` (`bash setup.sh deps`)
 - Python 3, used by `gen.py` to generate headers into `build/gen`
-- **Optional but strongly recommended:** `build/sysroot/` holding
-  `libc.so.6`, `libpthread.so.0`, `libdl.so.2` and `librt.so.1` copied from
-  your own console. Without them the binary links, but it won't load on the
-  console. The build prints a warning if they're missing.
+- **Strongly recommended:** `build/sysroot/` with the console's own
+  `libc.so.6`, `libpthread.so.0`, `libdl.so.2`, `librt.so.1` and friends.
+  Without them the binary links, but it may not load on the console. Fetch
+  them with the console plugged in: `bash setup.sh sysroot` on Linux, or
+  `setup.bat build` on Windows (WSL can't reach hakchi's USB link, so
+  Windows fetches them itself).
 
 ## Building for the console
 
 ```bash
-bash port/build.sh            # -> build/mkw-nesmini and build/mkw-nesmini.stripped
+bash setup.sh build           # deps + sysroot + build.sh + padbridge
+bash port/build.sh            # just the build -> build/mkw-nesmini(.stripped)
 ```
 
 | Variable | Default | Meaning |
@@ -58,9 +64,10 @@ This build exists only to test the renderer on a desktop. It isn't shipped.
 
 The binary reads the same `3ds/mkw-3ds/` folder as the 3DS version. Make it
 from your own disc with the upstream builder (see
-[`../src3ds/README.md`](../src3ds/README.md#building)). On Windows,
-`cook_content.ps1` runs that builder non-interactively. **No Nintendo assets
-are included in this repository.**
+[`../src3ds/README.md`](../src3ds/README.md#building)).
+`cook_content.ps1` (Windows) and `cook_content.sh` (Linux) run that builder
+non-interactively; `setup.bat game-files` / `bash setup.sh game-files` call
+them. **No Nintendo assets are included in this repository.**
 
 ## Running
 

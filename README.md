@@ -20,6 +20,7 @@ Linux system and Mali-400 GPU.
 
 | Path | What it is |
 |---|---|
+| `setup.bat` / `setup.sh` | One-step setup for Windows / Linux |
 | [`port/`](port/README.md) | The Linux port: libctru/citro3d replacements, build scripts, console launcher and test tools |
 | [`port/INSTALL.md`](port/INSTALL.md) | Step-by-step guide to installing it on the console |
 | [`src3ds/`](src3ds/README.md) | The upstream Mario Kart Wii 3DS sources and the game-file builder |
@@ -30,19 +31,54 @@ Linux system and Mali-400 GPU.
 
 ## Quick start
 
-1. **Make the game files** from your disc using the upstream builder. See
-   [src3ds/README.md](src3ds/README.md#building), or on Windows run
-   `port/cook_content.ps1`. You get a `3ds/mkw-3ds/` folder of about 3 GB.
-2. **Build the console binary** in WSL or Linux with an ARM hard-float cross compiler:
-   ```bash
-   sudo apt install g++-arm-linux-gnueabihf python3
-   bash port/build.sh          # -> build/mkw-nesmini.stripped
-   ```
-3. **Install it** on a hakchi CE console by following [port/INSTALL.md](port/INSTALL.md).
+You need: a console modded with **hakchi2 CE**, its USB cable, and your own
+**Mario Kart Wii (USA)** disc image (`.wbfs` or `.iso`). Copy the disc image
+into the `rom/` folder first.
 
-To test on a PC without the console, `bash port/host.sh` builds `build/mkw-host`.
-It's a native x86-64 version that renders headlessly through Mesa EGL. See
-[port/README.md](port/README.md#pc-test-build).
+### Windows
+
+Double-click **`setup.bat`**. It:
+
+1. makes the game files from your disc (the first run takes a few hours),
+2. builds the console program (in WSL, which it uses automatically),
+3. shares the game files with the console over the USB cable, and
+4. adds **Mario Kart Wii** to the console's menu.
+
+The console plays the game files straight from your PC, so keep the PC on
+while you play. You need [WSL](https://learn.microsoft.com/windows/wsl/install)
+(`wsl --install -d Ubuntu`), [devkitPro](https://devkitpro.org/wiki/Getting_Started),
+Python 3.11–3.14, Node.js LTS and Git. `setup.bat check` lists anything
+that's missing and how to fix it.
+
+### Ubuntu / Debian Linux
+
+```bash
+bash setup.sh            # game files + console program (installs what it needs with apt)
+bash setup.sh usb        # copy everything to a USB drive plugged into this PC
+bash setup.sh install    # add the menu entry (console plugged in over USB)
+```
+
+Then plug the USB drive into the console and restart it. On Linux the game
+files go on a USB drive rather than a PC share.
+
+### Individual steps
+
+Each step can be run on its own. Finished steps are skipped or resumed.
+
+| Step | Windows | Linux |
+|---|---|---|
+| Show what's ready | `setup.bat check` | `bash setup.sh check` |
+| Make game files | `setup.bat game-files` | `bash setup.sh game-files` |
+| Build console program | `setup.bat build` | `bash setup.sh build` |
+| Share game files with console | `setup.bat share` | — (use `usb`) |
+| Copy to USB drive | — | `bash setup.sh usb` |
+| Add menu entry | `setup.bat install` | `bash setup.sh install` |
+| PC test build (x86-64) | — | `bash setup.sh host` |
+
+The game files are built in `C:\MKW-3DS-Builder` (Windows) or
+`~/MKW-3DS-Builder` (Linux), outside synced folders like OneDrive. Set
+`MKW_BUILDER` to use another folder. See [port/INSTALL.md](port/INSTALL.md)
+for manual installs, options and troubleshooting.
 
 ## Credits
 
